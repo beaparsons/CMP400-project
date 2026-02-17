@@ -1,3 +1,5 @@
+using System.Numerics;
+using System.Reflection.Metadata;
 using Unity.Mathematics;
 using UnityEngine;
 
@@ -9,12 +11,13 @@ public class GameObjectPlacer : MonoBehaviour
     public GameObject SmallBox;
     public GameObject MediumBox;
     public GameObject LargeBox;
+    public int offset =10;
     public GameObject Floor;
-
-   // private GameObject[] GO;//remove
+    //cut
     private Vector2 MINSpace;
+    //cut
     private Vector2 MAXSpace;
-
+    //cut
     public int ObNum;
     private int ObLimit=48;
     private int ObMin =20;
@@ -27,9 +30,8 @@ public class GameObjectPlacer : MonoBehaviour
     private void Start()
     {
         Debug.Log("start");
-        //placement(StraightW);
-        setup();
-
+        string path = Pathgen();
+        
     }
 
     private void setup()
@@ -51,25 +53,6 @@ public class GameObjectPlacer : MonoBehaviour
             ObMin /= 2;
             MINSpace.y = 0;
         }
-
-        /* if(ObNum < 1){
-         Debug.Log("yeah");
-         ObNum = UnityEngine.Random.Range(ObMin, ObLimit);}
-         for(int i=0; i < ObNum; i++)
-         {
-             int rand = UnityEngine.Random.Range(1,5);
-             if(rand == 1){
-                 placement(CornerW);}
-             if(rand == 2){
-                 placement(StraightW);}
-             if(rand == 3){
-                 placement(SmallBox);}
-             if(rand == 4){
-                 placement(MediumBox);}
-             if(rand == 5){
-                 placement(LargeBox);}
-
-         }*/
 
         for (int x =0; x < RootBox; x++)
         {
@@ -94,43 +77,6 @@ public class GameObjectPlacer : MonoBehaviour
             
         }
 
-
-
-    }
-    private void placement(GameObject GO){
-        //Instantiate(GO);
-
-        GO.transform.position = new Vector3(UnityEngine.Random.Range(MINSpace.x,MAXSpace.x),GO.transform.localScale.y/2,UnityEngine.Random.Range(MINSpace.y,MAXSpace.y));
-        int rotate = UnityEngine.Random.Range(0,360);
-        GameObject temp = GO;
-        GO.transform.Rotate(0,rotate,0);
-        Instantiate(GO);
-        GO.transform.rotation = temp.transform.rotation;
-        if (Xsymm)
-        {
-            GO.transform.position = new Vector3(-temp.transform.position.x,temp.transform.position.y,temp.transform.position.z);
-
-            GO.transform.rotation = Quaternion.Inverse(temp.transform.rotation);
-            GO.transform.localScale = new Vector3(-temp.transform.localScale.x, temp.transform.localScale.y, temp.transform.localScale.z);
-            Instantiate(GO);
-            GO.transform.rotation = temp.transform.rotation;
-            }
-        if (Zsymm)
-        {
-            GO.transform.position = new Vector3(temp.transform.position.x,temp.transform.position.y,-temp.transform.position.z);
-            GO.transform.rotation = Quaternion.Inverse(temp.transform.rotation);
-            GO.transform.localScale = new Vector3(temp.transform.localScale.x, temp.transform.localScale.y, -temp.transform.localScale.z);
-            Instantiate(GO);
-            GO.transform.rotation = temp.transform.rotation;
-
-        }
-        if (Xsymm && Zsymm)
-        {
-            GO.transform.position = new Vector3(-temp.transform.position.x,temp.transform.position.y,temp.transform.position.z);
-            GO.transform.rotation = Quaternion.Inverse(temp.transform.rotation);
-            GO.transform.localScale = new Vector3(-temp.transform.localScale.x, temp.transform.localScale.y, temp.transform.localScale.z);
-            Instantiate(GO);
-        }
     }
 
     private void tileplace(GameObject GO, float x, float y)
@@ -145,54 +91,78 @@ public class GameObjectPlacer : MonoBehaviour
         Instantiate(GO);
     }
 
-    private void pathgen(GameObject GO)
+    private string Pathgen()
     {
-
-        Vector2 spawnpos = new Vector2(0,0);
-
-        Vector2 pointpos = new Vector2(RootBox,0);
-
-        Vector2 pathpos = spawnpos;
-
-        float lastmove = spawnpos.y;
-
-        float ymin=1;
-        float ymax = RootBox;
-        
-        while(pathpos.x != pointpos.x){
+        string path;
+        path+= "8"
+        Vector2 pos = new Vector2(0,0);
+        //start at 0,0 and move until reaching 10,0
+        float min =-5;
+        float max =5;
+        Vector2 end = new Vector2(offset,0);
+        while(pos.X < end.X){
         int rand = UnityEngine.Random.Range(1,5);
+        
         if(rand < 3){
-    
+            
+            pos.X ++;
+            path += "0";
+        }
+        else if(rand = 3){
+            if(pos.Y < max){
+            pos.Y ++;
+            path += "1";}
+        }
+        else{
+            if(pos.Y > min){
+            pos.Y --;
+            path += "2";}
+        }}
 
-            if(pathpos.y == lastmove){
-                for(float i=0; i < RootBox; i++){
-                    if(i != pathpos.y){
-                        tileplace(GO,pathpos.x,i);}}}
-            else if(pathpos.y > lastmove){
-                for(float i=0; i < RootBox; i++){
-                        if(lastmove < i || pathpos.y > i){
-                            tileplace(GO,pathpos.x,i);}}}
-                else{
-                    for(float i=0; i < RootBox; i++){
-                        if(lastmove > i || pathpos.y < i){
-                            tileplace(GO,pathpos.x,i);}}}
+        while(pos.Y != end.Y)
+        {
+            if(pos.Y > end.Y)
+            {
+                pos.Y--;
+                path +="2";}
+            else 
+            {
+                pos.Y++;
+                path +="1";}
+        }
+        path+= "9";
+        return path;
+    }
 
-            ymin=1; ymax=RootBox;
-            pathpos.x++;
-            }
-        if(rand == 3){
-                if(pathpos.y != ymin)
-                {
-                    pathpos.y--;
-                    ymax = pathpos.y;
-                }
-            }
-        if(rand == 4){
-                if(pathpos.y != ymax)
-                {
-                    pathpos.y++;
-                    ymin = pathpos.y;
-                }
+    private void placement(string path)
+    {
+        float pathFloat = path;
+        int temp;
+        Vector2 placepos = new Vector2(0,0);
+        bool end=false
+        while(pathFloat >1){
+            pathFloat/10;}
+        while(end){
+            pathFloat *=10;
+            temp =pathFloat;
+            switch(temp){
+                case 0:
+                    placepos.X++;
+                    //place object
+                    break;
+                case 1:
+                    placepos.Y++;
+                    //place object
+                    break;
+                case 2:
+                    placepos.Y--;
+                    //place object
+                    break;
+                case 9:
+                    end =true;
+                    break;
+                default:
+                    break;
             }
         }
     }
